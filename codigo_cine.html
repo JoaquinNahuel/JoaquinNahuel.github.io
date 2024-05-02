@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CODIGO FUENTE DE PROYECTO CINE</title>
+</head>
+<body>
+        <header>
+            <div class="container">
+                <h1>CODIGO FUENTE DE PROYECTO CINE</h1>
+                <nav>
+                    <p>from PyQt6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem
+                        from PyQt6 import uic
+                        
+                        class MiCine(QMainWindow):
+                            
+                            def __init__(self):
+                                super().__init__()
+                                uic.loadUi("Cine_Menu.ui", self)
+                                
+                                self.Ventana_Comida = Cliente_Comida(self)
+                                self.Ventana_Admin = Admin(self, self.Ventana_Comida)
+                                self.Ventana_Cliente = Cliente(self, self.Ventana_Admin)
+                                
+                                self.Boton_Admin.clicked.connect(self.mostrar_ventana_admin)
+                                self.Boton_Cliente.clicked.connect(self.mostrar_ventana_cliente_boleto) 
+                                self.Boton_Comida.clicked.connect(self.mostrar_ventana_comida)
+                                self.Boton_Admin.setDefault(True)
+                            
+                            def mostrar_ventana_comida(self):
+                                self.Ventana_Comida.show()
+                                self.hide()
+                        
+                            def mostrar_ventana_cliente_boleto(self):
+                                self.Ventana_Cliente.show()
+                                self.hide()
+                        
+                            def mostrar_ventana_admin(self):
+                                if self.lineEdit_user.text() != "admin" or self.lineEdit_pass.text() != "1234":
+                                    self.label.setText("No tienes permisos para usar este menu")
+                        
+                                if self.lineEdit_user.text() == "admin" and self.lineEdit_pass.text() == "1234":
+                                    self.label.setText("")
+                                    self.Ventana_Admin.show()
+                                    self.hide()
+                                
+                                self.lineEdit_user.setText("")
+                                self.lineEdit_pass.setText("")
+                        
+                        # ---------------------------------------------------------------------------------------------------------------------    
+                        
+                        class Cliente_Comida(QMainWindow):    
+                            def __init__(self, Ventana_Micine):
+                                super().__init__()
+                                uic.loadUi("Cine_Comida.ui", self)
+                        
+                                self.Ventana_Micine = Ventana_Micine
+                        
+                                self.compraFinal = []
+                        
+                                self.tabla_comida.cellClicked.connect(self.seleccionar_celda1)
+                                self.tabla_bebida.cellClicked.connect(self.seleccionar_celda2)
+                                self.tabla_pedido.cellClicked.connect(self.seleccionar_celda3)
+                                self.bt_agregar.clicked.connect(self.agregar_producto)
+                                self.bt_quitar.clicked.connect(self.quitar_producto)
+                                self.bt_volver.clicked.connect(self.volver_menu)
+                                self.tabla_comida.itemSelectionChanged.connect(self.verificar_agregar)
+                                self.tabla_bebida.itemSelectionChanged.connect(self.verificar_agregar)
+                                self.tabla_pedido.itemSelectionChanged.connect(self.verificar_quitar)
+                                self.verificar_agregar()
+                                self.verificar_quitar()
+                                self.bt_comprar.clicked.connect(self.compra_finalizada)
+                            
+                            def verificar_agregar(self):
+                                if self.tabla_comida.selectedItems() or self.tabla_bebida.selectedItems():
+                                    self.bt_agregar.setEnabled(True)
+                                else:
+                                    self.bt_agregar.setEnabled(False)
+                        
+                            def verificar_quitar(self):
+                                if self.tabla_pedido.selectedItems():
+                                    self.bt_quitar.setEnabled(True)
+                                else:
+                                    self.bt_quitar.setEnabled(False)
+                        
+                            def agregar_producto(self):
+                                cantidad = self.tabla_pedido.rowCount()
+                                self.tabla_pedido.setRowCount(cantidad+1)
+                        
+                                producto = self.label_producto.text()
+                                precio = self.label_precio.text()
+                        
+                                self.tabla_pedido.setItem(cantidad, 0, QTableWidgetItem(producto))
+                                self.tabla_pedido.setItem(cantidad, 1, QTableWidgetItem(precio))
+                        
+                                precio_producto = float(precio[2::])
+                        
+                                total_actual_texto = self.label_total.text().replace('$', '')
+                                total_actual = float(total_actual_texto)
+                                total_actual += precio_producto
+                           
+                                self.label_total.setText(f"$ {round(total_actual)}")
+                        
+                                self.tabla_comida.clearSelection()
+                                self.tabla_bebida.clearSelection()
+                        
+                                self.label_producto.setText("")
+                                self.label_precio.setText("")
+                        
+                            def quitar_producto(self):
+                                if self.tabla_pedido.currentRow() >= 0:
+                                    fila_actual = self.tabla_pedido.currentRow()
+                        
+                                    precio_texto = self.tabla_pedido.item(fila_actual, 1).text()
+                                    precio_producto = float(precio_texto.replace('$', ''))
+                        
+                                    total_actual_texto = self.label_total.text().replace('$', '')
+                                    total_actual = float(total_actual_texto)
+                                    total_actual -= precio_producto
+                        
+                                    self.label_total.setText(f"${round(total_actual)}")
+                        
+                                    self.tabla_pedido.removeRow(fila_actual)
+                        
+                                    self.tabla_pedido.clearSelection()
+                                    self.label_producto.setText("")
+                                    self.label_precio.setText("")
+                        
+                            def seleccionar_celda1(self, cantidad):
+                                producto_fila = self.tabla_comida.item(cantidad, 0)
+                                precio_fila = self.tabla_comida.item(cantidad, 1)
+                        
+                                if producto_fila is not None:
+                                    self.label_producto.setText(producto_fila.text())
+                                if precio_fila is not None:
+                                    self.label_precio.setText(precio_fila.text())
+                        
+                            def seleccionar_celda2(self, cantidad):
+                                producto_fila = self.tabla_bebida.item(cantidad, 0)
+                                precio_fila = self.tabla_bebida.item(cantidad, 1)
+                        
+                                if producto_fila is not None:
+                                    self.label_producto.setText(producto_fila.text())
+                                if precio_fila is not None:
+                                    self.label_precio.setText(precio_fila.text())
+                        
+                            def seleccionar_celda3(self, cantidad):
+                                producto_fila = self.tabla_pedido.item(cantidad, 0)
+                                precio_fila = self.tabla_pedido.item(cantidad, 1)
+                        
+                                if producto_fila is not None:
+                                    self.label_producto.setText(producto_fila.text())
+                                if precio_fila is not None:
+                                       self.label_precio.setText(precio_fila.text())
+                        
+                            def compra_finalizada(self):
+                                print("\nSu compra es:\n")
+                                
+                                for fila in range(self.tabla_pedido.rowCount()):
+                                    for columna in range(self.tabla_pedido.columnCount()):
+                                        item = self.tabla_pedido.item(fila, columna)
+                                        if item is not None:
+                                            self.compraFinal.append(f"{item.text()}")
+                        
+                                for i in range(0, len(self.compraFinal), 2):
+                                    print(self.compraFinal[i], self.compraFinal[i+1])
+                        
+                                print(f"\nTotal: {self.label_total.text()}")
+                        
+                                total_actual = 0
+                                self.label_total.setText(f"$ {total_actual}")
+                                self.compraFinal = []
+                                self.tabla_pedido.setRowCount(0)
+                        
+                            def closeEvent(self, event):
+                                self.Ventana_Micine.show()
+                        
+                            def volver_menu(self):
+                                self.Ventana_Micine.show()
+                                self.hide()
+                        
+                        # ---------------------------------------------------------------------------------------------------------------------
+                        
+                        class Admin(QMainWindow):
+                            def __init__(self, Ventana_Micine, Ventana_Comida):
+                                super().__init__()
+                                uic.loadUi("Cine_Admin.ui", self)
+                        
+                                self.Ventana_Micine = Ventana_Micine
+                                self.Ventana_Comida = Ventana_Comida
+                        
+                                self.lineEdit_precio.textChanged.connect(self.solo_numeros)
+                                self.precio_comida.textChanged.connect(self.solo_numeros_comida)
+                                self.precio_bebida.textChanged.connect(self.solo_numeros_bebida)
+                        
+                                self.tabla_comida.cellClicked.connect(self.seleccionar_celda1)
+                                self.tabla_bebida.cellClicked.connect(self.seleccionar_celda2)
+                                self.bt_agregar1.clicked.connect(self.agregar_comida)
+                                self.bt_agregar2.clicked.connect(self.agregar_bebida)
+                                self.bt_editar1.clicked.connect(self.editar_comida)
+                                self.bt_editar2.clicked.connect(self.editar_bebida)
+                                self.bt_eliminar1.clicked.connect(self.eliminar_comida)
+                                self.bt_eliminar2.clicked.connect(self.eliminar_bebida)
+                                self.bt_volver.clicked.connect(self.volver_menu)
+                           
+                            def solo_numeros(self):
+                                precio = self.lineEdit_precio.text()
+                        
+                                if not precio.isdigit():
+                                    self.lineEdit_precio.setText("")
+                            
+                            def solo_numeros_comida(self):
+                                precio_comida = self.precio_comida.text()
+                        
+                                if not precio_comida.isdigit():
+                                    self.precio_comida.setText("")
+                        
+                            def solo_numeros_bebida(self):
+                                precio_bebida = self.precio_bebida.text()
+                        
+                                if not precio_bebida.isdigit():
+                                    self.precio_bebida.setText("")
+                        
+                            def seleccionar_celda1(self, cantidad):
+                                producto_fila = self.tabla_comida.item(cantidad, 0)
+                                precio_fila = self.tabla_comida.item(cantidad, 1)
+                        
+                                if producto_fila is not None:
+                                    self.producto_comida.setText(producto_fila.text())
+                                if precio_fila is not None:
+                                    self.precio_comida.setText(precio_fila.text())
+                        
+                            def seleccionar_celda2(self, cantidad):
+                                producto_fila = self.tabla_bebida.item(cantidad, 0)
+                                precio_fila = self.tabla_bebida.item(cantidad, 1)
+                        
+                                if producto_fila is not None:
+                                    self.producto_bebida.setText(producto_fila.text())
+                                if precio_fila is not None:
+                                    self.precio_bebida.setText(precio_fila.text())
+                        
+                            def agregar_comida(self):
+                                cantidad = self.tabla_comida.rowCount()
+                                self.tabla_comida.setRowCount(cantidad+1)
+                                cantidad1 = self.Ventana_Comida.tabla_comida.rowCount()
+                                self.Ventana_Comida.tabla_comida.setRowCount(cantidad1+1)
+                        
+                                producto_comida = self.producto_comida.text()
+                                precio_comida = self.precio_comida.text()
+                        
+                                self.tabla_comida.setItem(cantidad, 0, QTableWidgetItem(producto_comida))
+                                self.tabla_comida.setItem(cantidad, 1, QTableWidgetItem(f"$ {precio_comida}"))
+                                self.Ventana_Comida.tabla_comida.setItem(cantidad1, 0, QTableWidgetItem(producto_comida))
+                                self.Ventana_Comida.tabla_comida.setItem(cantidad1, 1, QTableWidgetItem(f"$ {precio_comida}"))
+                        
+                                self.producto_comida.setText("")
+                                self.precio_comida.setText("")
+                        
+                            def agregar_bebida(self):
+                                cantidad = self.tabla_bebida.rowCount()
+                                self.tabla_bebida.setRowCount(cantidad+1)
+                                cantidad1 = self.Ventana_Comida.tabla_bebida.rowCount()
+                                self.Ventana_Comida.tabla_bebida.setRowCount(cantidad1+1)
+                        
+                                producto_bebida = self.producto_bebida.text()
+                                precio_bebida = self.precio_bebida.text()
+                        
+                                self.tabla_bebida.setItem(cantidad, 0, QTableWidgetItem(producto_bebida))
+                                self.tabla_bebida.setItem(cantidad, 1, QTableWidgetItem(f"$ {precio_bebida}"))
+                                self.Ventana_Comida.tabla_bebida.setItem(cantidad1, 0, QTableWidgetItem(producto_bebida))
+                                self.Ventana_Comida.tabla_bebida.setItem(cantidad1, 1, QTableWidgetItem(f"$ {precio_bebida}"))
+                                
+                        
+                                self.producto_bebida.setText("")
+                                self.precio_bebida.setText("")
+                        
+                            def editar_comida(self):
+                                producto_comida = self.producto_comida.text()
+                                precio_comida = self.precio_comida.text()
+                        
+                                self.tabla_comida.setItem(self.tabla_comida.currentRow(), 0, QTableWidgetItem(producto_comida))
+                                self.tabla_comida.setItem(self.tabla_comida.currentRow(), 1, QTableWidgetItem(f"$ {precio_comida}"))
+                                self.Ventana_Comida.tabla_comida.setItem(self.tabla_comida.currentRow(), 0, QTableWidgetItem(producto_comida))
+                                self.Ventana_Comida.tabla_comida.setItem(self.tabla_comida.currentRow(), 1, QTableWidgetItem(f"$ {precio_comida}"))
+                        
+                                self.producto_comida.setText("")
+                                self.precio_comida.setText("")
+                        
+                            def editar_bebida(self):
+                                producto_bebida = self.producto_bebida.text()
+                                precio_bebida = self.precio_bebida.text()
+                        
+                                self.tabla_bebida.setItem(self.tabla_bebida.currentRow(), 0, QTableWidgetItem(producto_bebida))
+                                self.tabla_bebida.setItem(self.tabla_bebida.currentRow(), 1, QTableWidgetItem(f"$ {precio_bebida}"))
+                                self.Ventana_Comida.tabla_bebida.setItem(self.tabla_bebida.currentRow(), 0, QTableWidgetItem(producto_bebida))
+                                self.Ventana_Comida.tabla_bebida.setItem(self.tabla_bebida.currentRow(), 1, QTableWidgetItem(f"$ {precio_bebida}"))
+                        
+                                self.producto_bebida.setText("")
+                                self.precio_bebida.setText("")
+                        
+                            def eliminar_comida(self):
+                                if self.tabla_comida.currentRow() >= 0:       
+                                    fila_actual = self.tabla_comida.currentRow()
+                                    self.tabla_comida.removeRow(fila_actual)
+                                    self.Ventana_Comida.tabla_comida.removeRow(fila_actual)
+                                    self.producto_comida.setText("")
+                                    self.precio_comida.setText("")
+                        
+                            def eliminar_bebida(self):
+                                if self.tabla_bebida.currentRow() >= 0:       
+                                    fila_actual = self.tabla_bebida.currentRow()
+                                    self.tabla_bebida.removeRow(fila_actual)
+                                    self.Ventana_Comida.tabla_bebida.removeRow(fila_actual)
+                                    self.producto_bebida.setText("")
+                                    self.precio_bebida.setText("")
+                        
+                            def closeEvent(self, event):
+                                self.Ventana_Micine.show()
+                        
+                            def volver_menu(self):
+                                self.Ventana_Micine.show()
+                                self.hide()
+                        
+                                self.label_tipoBoleto.setText("")
+                        
+                        # ---------------------------------------------------------------------------------------------------------------------  
+                        
+                        class Cliente(QMainWindow):    
+                            def __init__(self, Ventana_Micine, Ventana_Admin):
+                                super().__init__()
+                                uic.loadUi("Cine_Boletos.ui", self)
+                        
+                                self.Ventana_Micine = Ventana_Micine
+                                self.Ventana_Admin = Ventana_Admin
+                                self.Ventana_Sala1 = Sala1(self, Ventana_Micine)
+                                self.Ventana_Sala2 = Sala2(self, Ventana_Micine)
+                        
+                                self.bt_confirmar_boleto.setEnabled(False)
+                                self.cambiar_tipo.setEnabled(False)
+                                self.bt_sala1.setEnabled(False)
+                                self.bt_sala2.setEnabled(False)
+                        
+                                self.listo_tipo_boleto = [self.bt_normal, self.bt_tarjeta, self.bt_estudiante, self.bt_jubilado]
+                        
+                                for tipo in self.listo_tipo_boleto:
+                                    tipo.setEnabled(False)
+                        
+                                self.boton_no.clicked.connect(self.volver_menu)
+                                
+                                self.boton_si.clicked.connect(self.tipo_boleto)
+                                self.bt_confirmar_boleto.clicked.connect(self.boleto_confirmado)
+                                self.cambiar_tipo.clicked.connect(self.Otro_boleto)
+                        
+                                self.bt_sala1.clicked.connect(self.mostrar_ventana_Sala1)
+                                self.bt_sala2.clicked.connect(self.mostrar_ventana_Sala2)
+                                self.Ventana_Admin.bt_cambiar_precios.clicked.connect(self.Cambio_precio_boleto1)
+                        
+                            def Cambio_precio_boleto1(self):
+                                precio = self.Ventana_Admin.lineEdit_precio.text()
+                        
+                                if precio.isdigit():
+                                    precio = int(precio)
+                                    self.Ventana_Admin.precio_normal.setText(f"$ {round(precio)}")
+                                    self.Ventana_Admin.precio_tarjeta.setText(f"$ {round(precio + (precio*10)/100)}")               
+                                    self.Ventana_Admin.precio_estudiante.setText(f"$ {round(precio - (precio*10)/100)}")   
+                                    self.Ventana_Admin.precio_jubilado.setText(f"$ {round(precio - (precio*30)/100)}")
+                        
+                                    self.precio_normal.setText(f"$ {round(precio)}")
+                                    self.precio_tarjeta.setText(f"$ {round(precio + (precio*10)/100)}")
+                                    self.precio_estudiante.setText(f"$ {round(precio - (precio*10)/100)}")
+                                    self.precio_jubilado.setText(f"$ {round(precio - (precio*30)/100)}")
+                        
+                                    self.Ventana_Admin.label_tipoBoleto.setText(f"Los precios se cambiaron correctamente")
+                                    self.Ventana_Admin.lineEdit_precio.setText("")
+                                else:
+                                    self.Ventana_Admin.label_tipoBoleto.setText(f"Ingrese un numero valido")
+                        
+                            def tipo_boleto(self):
+                                for tipo in self.listo_tipo_boleto:
+                                    tipo.setEnabled(True)
+                        
+                                self.bt_normal.setChecked(True)
+                                self.boton_si.setEnabled(False)
+                                self.boton_no.setEnabled(False)
+                                self.bt_confirmar_boleto.setEnabled(True)
+                                
+                            def boleto_confirmado(self):
+                                for i, tipo in enumerate(self.listo_tipo_boleto):
+                                    if tipo.isChecked():    
+                                        if i == 0:
+                                            self.Ventana_Sala1.boleto = f"Tu tipo de boleto es: Normal"
+                                            self.Ventana_Sala2.boleto = f"Tu tipo de boleto es: Normal"
+                                            self.etiqueta.setText(f"eligió: Normal")
+                                        elif i == 1:
+                                            self.Ventana_Sala1.boleto = f"Tu tipo de boleto es: Tarjeta"
+                                            self.Ventana_Sala2.boleto = f"Tu tipo de boleto es: Tarjeta"
+                                            self.etiqueta.setText(f"eligió: Tarjeta")
+                                        elif i == 2:
+                                            self.Ventana_Sala1.boleto = f"Tu tipo de boleto es: Estudiante"
+                                            self.Ventana_Sala2.boleto = f"Tu tipo de boleto es: Estudiante"
+                                            self.etiqueta.setText(f"eligió: Estudiante")
+                                        else:
+                                            self.Ventana_Sala1.boleto = f"Tu tipo de boleto es: Jubilado"
+                                            self.Ventana_Sala2.boleto = f"Tu tipo de boleto es: Jubilado"
+                                            self.etiqueta.setText(f"eligió: Jubilado")
+                                        self.bt_sala1.setEnabled(True)
+                                        self.bt_sala2.setEnabled(True)
+                        
+                                for tipo in self.listo_tipo_boleto:
+                                    tipo.setEnabled(False)
+                        
+                                self.cambiar_tipo.setEnabled(True)
+                                self.bt_confirmar_boleto.setEnabled(False)
+                        
+                            def Otro_boleto(self):
+                                self.bt_confirmar_boleto.setEnabled(True)
+                        
+                                for tipo in self.listo_tipo_boleto:
+                                    if not tipo.isChecked():
+                                        tipo.setEnabled(True)
+                        
+                            def mostrar_ventana_Sala1(self):
+                                self.Ventana_Sala1.show()
+                                self.hide()
+                        
+                                self.Ventana_Sala1.confirmar_butaca.setEnabled(True)
+                        
+                                for lista in self.Ventana_Sala1.lista_butacas:
+                                    lista.setEnabled(True)
+                        
+                                self.Ventana_Sala1.butaca1.setChecked(True)
+                                self.Ventana_Sala1.comprar_otro.setEnabled(False)
+                                self.Ventana_Sala1.Finalizar_compra.setEnabled(False)
+                                self.Ventana_Sala1.boton_imprimir.setEnabled(False)
+                        
+                                self.bt_sala1.setEnabled(False)
+                                self.bt_sala2.setEnabled(False)
+                                self.cambiar_tipo.setEnabled(False)
+                        
+                                self.etiqueta.setText(f"")
+                        
+                            def mostrar_ventana_Sala2(self):
+                                self.Ventana_Sala2.show()
+                                self.hide()
+                        
+                                self.Ventana_Sala2.confirmar_butaca.setEnabled(True)
+                        
+                                for lista in self.Ventana_Sala2.lista_butacas:
+                                    lista.setEnabled(True)
+                        
+                                self.Ventana_Sala2.butaca1.setChecked(True)
+                                self.Ventana_Sala2.comprar_otro.setEnabled(False)
+                                self.Ventana_Sala2.Finalizar_compra.setEnabled(False)
+                                self.Ventana_Sala2.boton_imprimir.setEnabled(False)
+                        
+                                self.bt_sala1.setEnabled(False)
+                                self.bt_sala2.setEnabled(False)
+                                self.cambiar_tipo.setEnabled(False)
+                        
+                                self.etiqueta.setText(f"")
+                        
+                            def closeEvent(self, event):
+                                self.Ventana_Micine.show()
+                        
+                            def volver_menu(self):
+                                self.Ventana_Micine.show()
+                                self.hide()
+                        
+                        # ---------------------------------------------------------------------------------------------------------------------
+                        
+                        class Sala1(QMainWindow):    
+                            def __init__(self, Ventana_Cliente, Ventana_Micine):
+                                super().__init__()
+                                uic.loadUi("Cine_Butacas.ui", self)
+                        
+                                self.Ventana_Cliente = Ventana_Cliente
+                                self.Ventana_Micine = Ventana_Micine
+                        
+                                self.lista_butacas = []
+                                self.lista_ocupada = []
+                                self.boleto = None
+                                self.butaca = None
+                                
+                                for i in range(1, 31):
+                                    butaca_name = f"butaca{i}"
+                                    butaca = getattr(self, butaca_name)
+                                    self.lista_butacas.append(butaca)
+                        
+                                    butaca_name = f"ocupada_butaca{i}"
+                                    butaca = getattr(self, butaca_name)
+                                    self.lista_ocupada.append(butaca)
+                        
+                                for lista in self.lista_ocupada:
+                                    lista.setEnabled(False)
+                                    
+                                self.confirmar_butaca.setEnabled(False)
+                                self.elegir_butaca.setEnabled(False)
+                        
+                                self.confirmar_butaca.clicked.connect(self.Elegir_butaca)
+                                self.elegir_butaca.clicked.connect(self.Otra_butacas)
+                                self.comprar_otro.clicked.connect(self.volver_boleto)
+                                self.Finalizar_compra.clicked.connect(self.volver_inicio)
+                                self.boton_imprimir.clicked.connect(self.imprimir_boleto)
+                        
+                            def Elegir_butaca(self):
+                                self.confirmar_butaca.setEnabled(False)
+                        
+                                for lista in self.lista_butacas:
+                                    if not lista.isChecked():
+                                        self.etiqueta.setText(f"No eligió ninguna butaca. Para elegir otra butaca\n Pulse el boton -Elegir Butaca-")
+                                        self.label_elegir.setText(f"Elija una butaca -->")
+                                        self.elegir_butaca.setEnabled(True)
+                        
+                                c = 0
+                                for i, lista in enumerate(self.lista_butacas):
+                                    c += 1
+                                    if self.lista_butacas[i].isChecked():
+                                        if self.lista_ocupada[i].isChecked():
+                                            self.etiqueta.setText(f"La butaca que marco ya esta ocupada: {c}")
+                                            self.label_elegir.setText(f"Elija una butaca -->")
+                                            lista.setChecked(False)
+                                            self.elegir_butaca.setEnabled(True)
+                                            
+                                        else:
+                                            self.etiqueta.setText(f"La butaca que eligió es: {c}")
+                                            self.label_elegir.setText(f"")
+                                            lista.setChecked(False)
+                                            self.lista_ocupada[i].setChecked(True)
+                                            self.elegir_butaca.setEnabled(False)
+                                            self.butaca = f"Tu butaca es la numero: {c}"
+                                            self.boton_imprimir.setEnabled(True)
+                                        
+                                for lista in self.lista_butacas:
+                                    lista.setEnabled(False)
+                        
+                            def Otra_butacas(self):
+                                self.confirmar_butaca.setEnabled(True)
+                        
+                                for i, lista in enumerate(self.lista_butacas):
+                                    if not self.lista_butacas[i].isChecked():
+                                        lista.setEnabled(True)
+                        
+                            def closeEvent(self, event):
+                                self.Ventana_Cliente.show()
+                        
+                            def volver_boleto(self):
+                                self.Ventana_Cliente.show()
+                                self.hide()
+                        
+                                self.Ventana_Cliente.boton_si.setEnabled(True)
+                                self.Ventana_Cliente.boton_no.setEnabled(True)
+                        
+                                self.etiqueta.setText(f"La butaca que eligió es :")
+                        
+                            def volver_inicio(self):
+                                self.Ventana_Micine.show()
+                                self.hide()
+                        
+                                self.Ventana_Cliente.boton_si.setEnabled(True)
+                                self.Ventana_Cliente.boton_no.setEnabled(True)
+                        
+                                self.etiqueta.setText(f"La butaca que eligió es :")
+                        
+                            def imprimir_boleto(self):
+                                print("\n")
+                                print(self.boleto)
+                                print("Tu Sala es la numero: 1")
+                                print(self.butaca)
+                        
+                                self.comprar_otro.setEnabled(True)
+                                self.Finalizar_compra.setEnabled(True)
+                        
+                        # ---------------------------------------------------------------------------------------------------------------------
+                        
+                        class Sala2(QMainWindow):    
+                            def __init__(self, Ventana_Cliente, Ventana_Micine):
+                                super().__init__()
+                                uic.loadUi("Cine_Butacas.ui", self)
+                        
+                                self.Ventana_Cliente = Ventana_Cliente
+                                self.Ventana_Micine = Ventana_Micine
+                        
+                                self.lista_butacas = []
+                                self.lista_ocupada = []
+                                self.boleto = None
+                                self.butaca = None
+                                
+                                for i in range(1, 31):
+                                    butaca_name = f"butaca{i}"
+                                    butaca = getattr(self, butaca_name)
+                                    self.lista_butacas.append(butaca)
+                        
+                                    butaca_name = f"ocupada_butaca{i}"
+                                    butaca = getattr(self, butaca_name)
+                                    self.lista_ocupada.append(butaca)
+                        
+                                for lista in self.lista_ocupada:
+                                    lista.setEnabled(False)
+                                    
+                                self.confirmar_butaca.setEnabled(False)
+                                self.elegir_butaca.setEnabled(False)
+                        
+                                self.confirmar_butaca.clicked.connect(self.Elegir_butaca)
+                                self.elegir_butaca.clicked.connect(self.Otra_butacas)
+                                self.comprar_otro.clicked.connect(self.volver_boleto)
+                                self.Finalizar_compra.clicked.connect(self.volver_inicio)
+                                self.boton_imprimir.clicked.connect(self.imprimir_boleto)
+                        
+                            def Elegir_butaca(self):
+                                self.confirmar_butaca.setEnabled(False)
+                        
+                                for lista in self.lista_butacas:
+                                    if not lista.isChecked():
+                                        self.etiqueta.setText(f"No eligió ninguna butaca. Para elegir otra butaca\n Pulse el boton -Elegir Butaca-")
+                                        self.label_elegir.setText(f"Elija una butaca -->")
+                                        self.elegir_butaca.setEnabled(True)
+                        
+                                c = 0
+                                for i, lista in enumerate(self.lista_butacas):
+                                    c += 1
+                                    if self.lista_butacas[i].isChecked():
+                                        if self.lista_ocupada[i].isChecked():
+                                            self.etiqueta.setText(f"La butaca que marco ya esta ocupada: {c}")
+                                            self.label_elegir.setText(f"Elija una butaca -->")
+                                            lista.setChecked(False)
+                                            self.elegir_butaca.setEnabled(True)
+                                            
+                                        else:
+                                            self.etiqueta.setText(f"La butaca que eligió es: {c}")
+                                            self.label_elegir.setText(f"")
+                                            lista.setChecked(False)
+                                            self.lista_ocupada[i].setChecked(True)
+                                            self.elegir_butaca.setEnabled(False)
+                                            self.butaca = f"Tu butaca es la numero: {c}"
+                                            self.boton_imprimir.setEnabled(True)
+                                        
+                                for lista in self.lista_butacas:
+                                    lista.setEnabled(False)
+                        
+                            def Otra_butacas(self):
+                                self.confirmar_butaca.setEnabled(True)
+                        
+                                for i, lista in enumerate(self.lista_butacas):
+                                    if not self.lista_butacas[i].isChecked():
+                                        lista.setEnabled(True)
+                        
+                            def closeEvent(self, event):
+                                self.Ventana_Cliente.show()
+                        
+                            def volver_boleto(self):
+                                self.Ventana_Cliente.show()
+                                self.hide()
+                        
+                                self.Ventana_Cliente.boton_si.setEnabled(True)
+                                self.Ventana_Cliente.boton_no.setEnabled(True)
+                        
+                                self.etiqueta.setText(f"La butaca que eligió es :")
+                        
+                            def volver_inicio(self):
+                                self.Ventana_Micine.show()
+                                self.hide()
+                        
+                                self.Ventana_Cliente.boton_si.setEnabled(True)
+                                self.Ventana_Cliente.boton_no.setEnabled(True)
+                        
+                                self.etiqueta.setText(f"La butaca que eligió es :")
+                        
+                            def imprimir_boleto(self):
+                                print("\n")
+                                print(self.boleto)
+                                print("Tu Sala es la numero: 2")
+                                print(self.butaca)
+                        
+                                self.comprar_otro.setEnabled(True)
+                                self.Finalizar_compra.setEnabled(True)
+                        
+                        # ---------------------------------------------------------------------------------------------------------------------
+                                  
+                        app = QApplication([])
+                        
+                        cine = MiCine()
+                        cine.show()
+                        
+                        app.exec()</p>
+                </nav>
+            </div>
+        </header>
+</body>
+</html>
